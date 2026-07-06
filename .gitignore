@@ -1,0 +1,16 @@
+# Databases (Uncomment the line below if you do NOT want to upload mapsphere.db to GitHub)
+# mapsphere.db
+
+# OS files
+Thumbs.db
+.DS_Store
+Desktop.ini
+
+# IDEs / Editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

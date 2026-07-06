@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MapSphere | Spatial Intelligence Platform</title>
+  <meta name="description" content="Access MapSphere, the next-generation spatial intelligence and geospatial visualization platform. Real-time data streams and mapping solutions.">
+  <!-- Google Fonts: Plus Jakarta Sans for clean tech aesthetic -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Leaflet Maps CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Dynamic Constellation Canvas -->
+  <canvas id="bg-canvas"></canvas>
+
+  <!-- Glowing background ambient blobs -->
+  <div class="ambient-blobs">
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+  </div>
+
+  <div class="app-container">
+    <!-- Auth Container -->
+    <div id="auth-container" class="auth-container">
+      <div class="auth-card" id="auth-card">
+        <!-- Decorative Top Bar -->
+        <div class="card-glow-bar"></div>
+
+        <!-- Unified Logo Area (Sticky at top of card) -->
+        <div class="logo-area">
+          <canvas id="globe-canvas" width="80" height="80" class="logo-globe"></canvas>
+          <span class="logo-text">MapSphere</span>
+        </div>
+
+        <!-- 1. SIGN IN FORM -->
+        <div class="form-panel active" id="login-panel">
+          <div class="panel-header">
+            <h2>Welcome Back</h2>
+            <p>Enter your credentials to access your spatial workspace</p>
+          </div>
+
+          <form id="login-form" novalidate>
+            <!-- Email Input -->
+            <div class="input-group">
+              <div class="input-wrapper">
+                <span class="input-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="16" rx="2" />
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                  </svg>
+                </span>
+                <input type="email" id="login-email" required placeholder=" " autocomplete="email">
+                <label for="login-email">Email Address</label>
+              </div>
+              <span class="error-msg" id="login-email-error">Please enter a valid email address</span>
+            </div>
+
+            <!-- Password Input -->
+            <div class="input-group">
+              <div class="input-wrapper">
+                <span class="input-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                </span>
+                <input type="password" id="login-password" required placeholder=" " autocomplete="current-password">
+                <label for="login-password">Password</label>
+                <button type="button" class="password-toggle" aria-label="Toggle password visibility">
+                  <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                  <svg class="eye-off-icon hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61M2 2l20 20" />
+                  </svg>
+                </button>
+              </div>
+              <span class="error-msg" id="login-password-error">Password must be at least 6 characters</span>
+            </div>
+
+            <div class="form-options">
+              <label class="checkbox-container">
+                <input type="checkbox" id="remember-me">
+                <span class="checkmark"></span>
+                <span class="label-text">Remember me</span>
+              </label>
+              <button type="button" class="btn-link" id="goto-reset">Forgot Password?</button>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="login-submit">
+              <span class="btn-text">Sign In</span>
+              <span class="spinner hide"></span>
+            </button>
+          </form>
+
+          <div class="divider">
+            <span>or sign in with</span>
+          </div>
+
+          <div class="social-login">
+            <button class="social-btn" aria-label="Sign in with Google">
+              <svg viewBox="0 0 24 24" width="20" height="20">
+                <path fill="#EA4335" d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.114-5.136 4.114A5.514 5.514 0 0 1 8.5 13a5.514 5.514 0 0 1 5.491-5.514c1.472 0 2.808.545 3.844 1.446l3.078-3.078C18.996 3.93 16.275 3 13.991 3 8.473 3 4 7.473 4 13s4.473 10 9.991 10c5.768 0 9.799-4.053 9.799-9.972 0-.671-.06-1.317-.18-1.743H12.24Z" />
+              </svg>
+            </button>
+            <button class="social-btn" aria-label="Sign in with GitHub">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.865 8.166 6.839 9.489.5.092.682-.217.682-.482 0-.237-.008-.866-.013-1.7-2.782.603-3.369-1.34-3.369-1.34-.454-1.156-1.11-1.462-1.11-1.462-.908-.62.069-.608.069-.608 1.003.07 1.531 1.03 1.531 1.03.892 1.529 2.341 1.087 2.91.831.092-.646.35-1.086.636-1.336-2.22-.253-4.555-1.11-4.555-4.943 0-1.091.39-1.984 1.029-2.683-.103-.253-.446-1.27.098-2.647 0 0 .84-.269 2.75 1.025A9.564 9.564 0 0 1 12 6.844c.85.004 1.705.115 2.504.337 1.909-1.294 2.747-1.025 2.747-1.025.546 1.377.203 2.394.1 2.647.64.699 1.028 1.592 1.028 2.683 0 3.842-2.339 4.687-4.566 4.935.359.309.678.919.678 1.852 0 1.336-.012 2.415-.012 2.743 0 .267.18.579.688.481C19.137 20.162 22 16.418 22 12c0-5.523-4.477-10-10-10Z" />
+              </svg>
+            </button>
+            <button class="social-btn" aria-label="Sign in with Apple">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-.96.04-2.13.64-2.82 1.45-.6.69-1.12 1.83-.98 2.94 1.07.08 2.15-.52 2.81-1.33Z" />
+              </svg>
+            </button>
+          </div>
+
+          <div class="panel-footer" style="flex-direction: column; align-items: center; gap: 12px; margin-top: 16px;">
+            <div>
+              <span>Don't have an account?</span>
+              <button type="button" class="btn-link font-weight-semibold" id="goto-signup">Sign Up</button>
+            </div>
+            <div style="border-top: 1px solid var(--border-color); width: 100%; padding-top: 12px; text-align: center;">
+              <button type="button" class="btn-link font-weight-semibold" id="goto-phone">Sign in with Mobile (OTP)</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. SIGN UP FORM -->
+        <div class="form-panel" id="signup-panel">
+          <div class="panel-header">
+            <h2>Create Workspace</h2>
+            <p>Join MapSphere and start charting your spatial databases</p>
+          </div>
+
+          <form id="signup-form" novalidate>
+            <!-- Full Name Input -->
+            <div class="input-group">
+              <div class="input-wrapper">
+                <span class="input-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                </span>
+                <input type="text" id="signup-name" required placeholder=" ">
+                <label for="signup-name">Full Name</label>
+              </div>
+              <span class="error-msg" id="signup-name-error">Please enter your name</span>
+            </div>
+
+            <!-- Email Input -->
+            <div class="input-group">
+              <div class="input-wrapper">
+                <span class="input-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="16" rx="2" />
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                  </svg>
+                </span>
+                <input type="email" id="signup-email" required placeholder=" " autocomplete="email">
+                <label for="signup-email">Email Address</label>
+              </div>
+              <span class="error-msg" id="signup-email-error">Please enter a valid email address</span>
+            </div>
+
+            <!-- Password Input -->
+            <div class="input-group">
+              <div class="input-wrapper">
+                <span class="input-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                </span>
+                <input type="password" id="signup-password" required placeholder=" " autocomplete="new-password">
+                <label for="signup-password">Password</label>
+                <button type="button" class="password-toggle" aria-label="Toggle password visibility">
+                  <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                  <svg class="eye-off-icon hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68M6.61 6.61A13.52 13.52 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61M2 2l20 20" />
+                  </svg>
+                </button>
+              </div>
+              <!-- Live Password strength bar -->
+              <div class="strength-indicator">
+                <div class="strength-bar" id="strength-bar"></div>
+              </div>
+              <span class="error-msg" id="signup-password-error">Password must be at least 8 characters with letters & numbers</span>
+            </div>
+
+            <!-- Terms Checkbox -->
+            <div class="form-options">
+              <label class="checkbox-container">
+                <input type="checkbox" id="terms-accept" required>
+                <span class="checkmark"></span>
+                <span class="label-text text-sm">I agree to the <a href="#" class="btn-link inline">Terms of Service</a> & <a href="#" class="btn-link inline">Privacy Policy</a></span>
+              </label>
+            </div>
+            <span class="error-msg text-center" id="terms-error">You must accept the terms</span>
+
+            <button type="submit" class="btn btn-primary" id="signup-submit">
+              <span class="btn-text">Create Account</span>
+              <span class="spinner hide"></span>
+            </button>
+          </form>
+
+          <div class="panel-footer">
+            <span>Already have an account?</span>
+            <button type="button" class="btn-link font-weight-semibold" id="goto-login-from-signup">Sign In</button>
+          </div>
+        </div>
+
+        <!-- 3. FORGOT PASSWORD FORM -->
+        <div class="form-panel" id="reset-panel">
+          <div class="panel-header">
+            <h2>Recover Key</h2>
+            <p>Enter your recovery email to reset your workspace access token</p>
+          </div>
+
+          <!-- Successful Reset State Placeholder (hidden initially) -->
+          <div class="reset-success-message hide" id="reset-success-box">
+            <div class="success-icon-wrapper">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+            <h3>Email Dispatched</h3>
+            <p>Verification instructions have been sent to <strong id="sent-email-placeholder">email@domain.com</strong>. Please check your inbox and spam folders.</p>
+          </div>
+
+          <form id="reset-form" novalidate>
+            <!-- Email Input -->
+            <div class="input-group">
+              <div class="input-wrapper">
+                <span class="input-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="16" rx="2" />
+                    <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                  </svg>
+                </span>
+                <input type="email" id="reset-email" required placeholder=" ">
+                <label for="reset-email">Recovery Email Address</label>
+              </div>
+              <span class="error-msg" id="reset-email-error">Please enter a valid email address</span>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="reset-submit">
+              <span class="btn-text">Send Reset Link</span>
+              <span class="spinner hide"></span>
+            </button>
+          </form>
+
+          <div class="panel-footer">
+            <button type="button" class="btn-link font-weight-semibold flex-center" id="goto-login-from-reset">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="arrow-icon">
+                <line x1="19" y1="12" x2="5" y2="12" />
+                <polyline points="12 19 5 12 12 5" />
+              </svg>
+              Back to Sign In
+            </button>
+          </div>
+        </div>
+
+        <!-- 4. PHONE LOGIN FORM -->
+        <div class="form-panel" id="phone-panel">
+          <div class="panel-header">
+            <h2>Mobile Sign In</h2>
+            <p>Enter your phone number to receive a one-time passcode</p>
+          </div>
+
+          <form id="phone-form" novalidate>
+            <!-- Phone Input -->
+            <div class="input-group">
+              <div class="input-wrapper">
+                <span class="input-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                  </svg>
+                </span>
+                <input type="tel" id="phone-number" required placeholder=" " autocomplete="tel">
+                <label for="phone-number">Mobile Number</label>
+                <button type="button" class="btn-send-otp" id="btn-send-otp">Send OTP</button>
+              </div>
+              <span class="error-msg" id="phone-number-error">Please enter a valid 10+ digit mobile number</span>
+            </div>
+
+            <!-- OTP Status Info Message -->
+            <div class="otp-status-info hide" id="otp-status-info"></div>
+
+            <!-- OTP Input -->
+            <div class="input-group hide" id="otp-group">
+              <div class="input-wrapper">
+                <span class="input-icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                </span>
+                <input type="text" id="phone-otp" required placeholder=" " autocomplete="one-time-code" maxlength="6">
+                <label for="phone-otp">Enter 6-Digit OTP</label>
+              </div>
+              <span class="error-msg" id="phone-otp-error">Incorrect or expired OTP code</span>
+            </div>
+
+            <button type="submit" class="btn btn-primary" id="phone-submit" disabled>
+              <span class="btn-text">Verify & Sign In</span>
+              <span class="spinner hide"></span>
+            </button>
+          </form>
+
+          <div class="panel-footer">
+            <button type="button" class="btn-link font-weight-semibold" id="goto-login-from-phone">Sign in with Email</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dashboard View (Revealed on Successful login/signup) -->
+    <div id="dashboard-view" class="dashboard-view hide">
+      <header class="db-header">
+        <div class="db-logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+            <path d="M2 12h20" />
+          </svg>
+          <span class="logo-text">MapSphere</span>
+          <span class="badge">Enterprise</span>
+        </div>
+        <div class="db-profile">
+          <div class="profile-avatar" id="profile-avatar">U</div>
+          <button class="logout-btn" id="logout-btn" title="Sign Out">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+            <span>Logout</span>
+          </button>
+        </div>
+      </header>
+
+      <main class="db-content">
+        <div class="db-grid">
+          
+          <!-- Column 1: Nearby Explorer Sidebar -->
+          <div class="db-card explorer-card">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+              <h3>Nearby Explorer</h3>
+              <button class="logout-btn" id="logout-btn-sidebar" title="Sign Out" style="height: 30px; padding: 0 12px; font-size: 11px; border-radius: 15px;">
+                Logout
+              </button>
+            </div>
+            
+            <!-- Category Filters -->
+            <div class="category-filters">
+              <button class="filter-tab active" data-type="all">All</button>
+              <button class="filter-tab" data-type="village">Villages</button>
+              <button class="filter-tab" data-type="hotel">Hotels</button>
+              <button class="filter-tab" data-type="school">Schools</button>
+              <button class="filter-tab" data-type="restaurant">Food</button>
+            </div>
+            
+            <!-- Nearby Places Scrollable List -->
+            <div class="nearby-list" id="nearby-list">
+              <div class="list-placeholder">Searching nearby amenities...</div>
+            </div>
+          </div>
+
+          <!-- Column 2: Live Map Card (Google Maps Layer) -->
+          <div class="db-card map-card">
+            <div class="card-header">
+              <h3>Live Vector Nodes & Geospatial Activity</h3>
+              <div class="map-controls">
+                <span class="map-coord" id="map-coord">LAT: 37.7749 | LNG: -122.4194</span>
+                <button class="map-control-btn" id="map-recenter" title="Recenter Map">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="22" y1="12" x2="18" y2="12" />
+                    <line x1="6" y1="12" x2="2" y2="12" />
+                    <line x1="12" y1="6" x2="12" y2="2" />
+                    <line x1="12" y1="22" x2="12" y2="18" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+             <div class="map-canvas-container">
+              <!-- Search Bar Overlay -->
+              <div class="map-search-bar">
+                <input type="text" id="map-search-input" placeholder="Search street, city, country...">
+                <button id="map-clear-btn" class="map-clear-btn hide" title="Clear Search">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+                <button id="map-search-btn" title="Search Location">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Search suggestions overlay dropdown -->
+              <div id="search-suggestions" class="search-suggestions hide"></div>
+
+              <!-- Map Layer Switcher -->
+              <div class="map-layer-switcher">
+                <button class="layer-tab active" data-layer="streets">Streets</button>
+                <button class="layer-tab" data-layer="satellite">Satellite</button>
+                <button class="layer-tab" data-layer="terrain">Terrain</button>
+              </div>
+
+              <!-- Leaflet Map Injection Target -->
+              <div id="leaflet-map"></div>
+              
+              <!-- Map Overlay -->
+              <div class="map-overlay">
+                <div class="overlay-stat">
+                  <span class="stat-lbl">Active View</span>
+                  <span class="stat-val" id="viewport-label">Tumkur</span>
+                </div>
+                <div class="overlay-stat">
+                  <span class="stat-lbl">Signals</span>
+                  <span class="stat-val" id="nearby-count">0 POIs</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Column 3: Recommendations & Smart suggestion box -->
+          <div class="db-sidebar">
+            <!-- User welcome card -->
+            <div class="db-card user-welcome">
+              <div class="user-welcome-header">
+                <h3>Welcome, <span id="welcome-user-name">Workspace Member</span>!</h3>
+                <div class="status-indicator-active">
+                  <span class="pulse-dot"></span>
+                  <span>Online</span>
+                </div>
+              </div>
+              <p>Your spatial workspace has loaded successfully. Live Google Maps tiles active.</p>
+            </div>
+
+            <!-- Smart Recommendation Card -->
+            <div class="db-card insights-card">
+              <div class="card-header">
+                <h3>Smart Insights</h3>
+                <span class="badge badge-accent">Auto-Analyzed</span>
+              </div>
+              <div class="insights-container" id="insights-container">
+                <div class="insight-placeholder">Analyzing viewport facilities...</div>
+              </div>
+            </div>
+
+            <!-- Interactive Suggestion Box Card -->
+             <div class="db-card suggestion-console">
+               <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                 <div style="display: flex; align-items: center; gap: 8px;">
+                   <h3>Workspace Assistant</h3>
+                   <span class="status-pulse-green"></span>
+                 </div>
+                 <button class="logout-btn" id="logout-btn-chatbot" title="Sign Out" style="height: 30px; padding: 0 12px; font-size: 11px; border-radius: 15px;">
+                   Logout
+                 </button>
+               </div>
+              <div class="suggestion-chat-log" id="suggestion-chat-log">
+                <div class="chat-line system-msg">Hello! Search a city or enter coordinates, then ask me about local villages/places or the best food options.</div>
+              </div>
+              
+              <!-- Suggestion Quick Chips -->
+              <div class="suggestion-chips" id="suggestion-chips">
+                <button class="chip-btn" data-query="Find best food">🍕 Best Food</button>
+                <button class="chip-btn" data-query="Find local restaurants">🍣 Local Restaurants</button>
+                <button class="chip-btn" data-query="Recommend top places">📍 Top Places</button>
+                <button class="chip-btn" data-query="Recommend top villages">🏡 Top Villages</button>
+              </div>
+              
+              <div class="suggestion-input-wrapper">
+                <input type="text" id="suggestion-input" placeholder="e.g. 'Show me the best hotel'">
+                <button id="suggestion-submit-btn">Ask</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </main>
+    </div>
+  </div>
+  
+  <!-- Custom POI Creation Dialog Modal -->
+  <div id="poi-modal" class="poi-modal hide">
+    <div class="poi-modal-content">
+      <div class="poi-modal-header">
+        <h3>Add Custom Place</h3>
+        <button id="poi-modal-close" class="modal-close-btn">&times;</button>
+      </div>
+      <form id="poi-form" novalidate>
+        <div class="input-group">
+          <div class="input-wrapper">
+            <input type="text" id="poi-name" required placeholder=" ">
+            <label for="poi-name">Place Name</label>
+          </div>
+        </div>
+        <div class="input-group">
+          <div class="select-wrapper">
+            <select id="poi-type" required>
+              <option value="hotel">Hotel / Accommodation</option>
+              <option value="school">School / Academy</option>
+              <option value="restaurant">Restaurant / Eatery</option>
+            </select>
+          </div>
+        </div>
+        <div class="input-group">
+          <div class="input-wrapper">
+            <input type="number" id="poi-rating" min="1.0" max="5.0" step="0.1" required placeholder=" ">
+            <label for="poi-rating">Rating (1.0 - 5.0)</label>
+          </div>
+        </div>
+        <div class="input-group">
+          <div class="input-wrapper">
+            <input type="text" id="poi-desc" placeholder=" ">
+            <label for="poi-desc">Description (Optional)</label>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary" id="poi-submit">
+          <span class="btn-text">Register Place</span>
+          <span class="spinner hide"></span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="script.js"></script>
+</body>
+</html>
