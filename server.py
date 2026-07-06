@@ -9,7 +9,7 @@ import urllib.parse
 import mimetypes
 from datetime import datetime, timedelta
 
-PORT = 8080
+PORT = int(os.environ.get("PORT", 8080))
 DB_FILE = "mapsphere.db"
 
 # In-memory OTP store: { phone_number: { "otp": otp_code, "expires_at": datetime } }
@@ -555,9 +555,9 @@ def run_server():
     class ThreadingHTTPServer(socketserver.ThreadingMixIn, http.server.HTTPServer):
         allow_reuse_address = True
 
-    server_address = ('127.0.0.1', PORT) # Explicit localhost IP
+    server_address = ('0.0.0.0', PORT)
     httpd = ThreadingHTTPServer(server_address, MapSphereHandler)
-    print(f"MapSphere Server running on http://127.0.0.1:{PORT}...")
+    print(f"MapSphere Server running on port {PORT}...")
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
