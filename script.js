@@ -3,6 +3,17 @@
  * Client-Side Interactive Engine v2
  */
 
+// Dynamic API URL Resolver
+function getApiUrl(endpoint) {
+  if (window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') || window.location.protocol === 'file:') {
+    // If running locally but not on port 8080 (e.g. Live Server on port 5500, or raw file:///), point to local python server on port 8080
+    if (!window.location.origin.includes(':8080')) {
+      return 'http://127.0.0.1:8080' + endpoint;
+    }
+  }
+  return endpoint;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   initBackgroundCanvas();
   startGlobeVisualizer();
@@ -228,7 +239,7 @@ function startGlobeVisualizer() {
    ========================================================================== */
 async function checkSession() {
   try {
-    const response = await fetch('/api/session');
+    const response = await fetch(getApiUrl('/api/session'));
     if (response.ok) {
       const data = await response.json();
       if (data.status === 'success') {
@@ -406,7 +417,7 @@ function initFormInteractivity() {
     spinner.classList.remove('hide');
 
     try {
-      const response = await fetch('/api/login', {
+      const response = await fetch(getApiUrl('/api/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.value, password: pass.value })
@@ -478,7 +489,7 @@ function initFormInteractivity() {
     spinner.classList.remove('hide');
 
     try {
-      const response = await fetch('/api/register', {
+      const response = await fetch(getApiUrl('/api/register'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: name.value, email: email.value, password: pass.value })
@@ -615,7 +626,7 @@ function initFormInteractivity() {
     sendOtpBtn.textContent = 'Sending...';
     
     try {
-      const response = await fetch('/api/otp/send', {
+      const response = await fetch(getApiUrl('/api/otp/send'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone: phoneVal })
@@ -684,7 +695,7 @@ function initFormInteractivity() {
     spinner.classList.remove('hide');
     
     try {
-      const response = await fetch('/api/otp/login', {
+      const response = await fetch(getApiUrl('/api/otp/login'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone: phoneVal, otp: otpVal })
@@ -1087,7 +1098,7 @@ async function exitDashboard() {
 
   try {
     // Call server logout to invalidate SQLite token session
-    await fetch('/api/logout', { method: 'POST' });
+    await fetch(getApiUrl('/api/logout'), { method: 'POST' });
   } catch (e) {
     console.warn('API Logout error:', e);
   }
@@ -1600,7 +1611,7 @@ async function updateNearbyExplorer(lat, lng) {
   // 2. Fetch custom POIs from database
   let customPOIs = [];
   try {
-    const response = await fetch('/api/pois');
+    const response = await fetch(getApiUrl('/api/pois'));
     if (response.ok) {
       customPOIs = await response.json();
       allCustomPOIs = customPOIs; // Update global database records
@@ -2042,7 +2053,7 @@ function initCustomPOIHandlers() {
     spinner.classList.remove('hide');
     
     try {
-      const response = await fetch('/api/pois', {
+      const response = await fetch(getApiUrl('/api/pois'), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

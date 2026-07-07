@@ -87,6 +87,15 @@ def parse_cookies(cookie_header):
             cookies[parts[0].strip()] = parts[1].strip()
     return cookies
 
+# Helper: Parse datetime strings from DB robustly
+def parse_db_datetime(dt_str):
+    for fmt in ("%Y-%m-%d %H:%M:%S.%f", "%Y-%m-%d %H:%M:%S"):
+        try:
+            return datetime.strptime(dt_str, fmt)
+        except ValueError:
+            continue
+    return datetime.now()
+
 class MapSphereHandler(http.server.BaseHTTPRequestHandler):
     protocol_version = 'HTTP/1.1' # Standardize HTTP/1.1
 
@@ -101,11 +110,29 @@ class MapSphereHandler(http.server.BaseHTTPRequestHandler):
         self.send_header('Content-Length', str(len(body)))
         self.send_header('Connection', 'close') # Close socket immediately
         self.send_header('Cache-Control', 'no-store, no-cache, must-revalidate')
+        
+        # CORS headers
+        origin = self.headers.get('Origin', '*')
+        self.send_header('Access-Control-Allow-Origin', origin)
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie')
+        self.send_header('Access-Control-Allow-Credentials', 'true')
+        
         if headers:
             for key, val in headers.items():
                 self.send_header(key, val)
         self.end_headers()
         self.wfile.write(body)
+
+    def do_OPTIONS(self):
+        origin = self.headers.get('Origin', '*')
+        self.send_response(204)
+        self.send_header('Access-Control-Allow-Origin', origin)
+        self.send_header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE')
+        self.send_header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie')
+        self.send_header('Access-Control-Allow-Credentials', 'true')
+        self.end_headers()
+
 
     def do_GET(self):
         parsed_url = urllib.parse.urlparse(self.path)
@@ -159,7 +186,7 @@ class MapSphereHandler(http.server.BaseHTTPRequestHandler):
                 return
                 
             user_id, name, email, expires_at_str = row
-            expires_at = datetime.strptime(expires_at_str, "%Y-%m-%d %H:%M:%S.%f")
+            expires_at = parse_db_datetime(expires_at_str)
             
             # Check session expiry
             if expires_at < datetime.now():
