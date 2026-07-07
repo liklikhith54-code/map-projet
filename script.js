@@ -14,12 +14,148 @@ function getApiUrl(endpoint) {
   return endpoint;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+let clientSideOnly = false;
+
+async function checkBackendAvailability() {
+  try {
+    const response = await fetch(getApiUrl('/api/session'));
+    if (response.ok || response.status === 401) {
+      clientSideOnly = false;
+      console.log("MapSphere Backend is active. Using full-stack mode.");
+    } else {
+      clientSideOnly = true;
+      console.warn("MapSphere Backend returned error status. Using client-side fallback mode.");
+    }
+  } catch (err) {
+    clientSideOnly = true;
+    console.warn("MapSphere Backend is unreachable. Using client-side fallback mode.", err);
+  }
+}
+
+function mockApiCall(endpoint, options = {}) {
+  let body = {};
+  if (options.body) {
+    try {
+      body = JSON.parse(options.body);
+    } catch(e) {}
+  }
+  
+  let responseData = {};
+  let status = 200;
+  
+  if (endpoint === '/api/session') {
+    const savedUser = localStorage.getItem('mapsphere_user_session');
+    if (savedUser) {
+      responseData = { status: 'success', user: JSON.parse(savedUser) };
+      status = 200;
+    } else {
+      responseData = { error: 'No active session' };
+      status = 401;
+    }
+  } 
+  else if (endpoint === '/api/login') {
+    const email = body.email || 'guest@mapsphere.local';
+    const name = email.split('@')[0].split('.')[0];
+    const capitalizedName = name.charAt(0).toUpperCase() + name.slice(1);
+    
+    responseData = {
+      status: 'success',
+      user: { id: 999, name: capitalizedName, email: email }
+    };
+    localStorage.setItem('mapsphere_user_session', JSON.stringify(responseData.user));
+    status = 200;
+  } 
+  else if (endpoint === '/api/register') {
+    const name = body.name || 'New User';
+    const email = body.email || 'guest@mapsphere.local';
+    
+    responseData = {
+      status: 'success',
+      user: { id: 999, name: name, email: email }
+    };
+    localStorage.setItem('mapsphere_user_session', JSON.stringify(responseData.user));
+    status = 201;
+  } 
+  else if (endpoint === '/api/logout') {
+    localStorage.removeItem('mapsphere_user_session');
+    responseData = { status: 'success' };
+    status = 200;
+  } 
+  else if (endpoint === '/api/otp/send') {
+    responseData = {
+      status: 'success',
+      message: 'OTP sent (mock offline mode)',
+      otp: '123456'
+    };
+    status = 200;
+  } 
+  else if (endpoint === '/api/otp/login') {
+    responseData = {
+      status: 'success',
+      user: { id: 999, name: 'Phone User', email: 'phone@mapsphere.local' }
+    };
+    localStorage.setItem('mapsphere_user_session', JSON.stringify(responseData.user));
+    status = 200;
+  } 
+  else if (endpoint === '/api/pois') {
+    if (options.method === 'POST') {
+      const customPois = JSON.parse(localStorage.getItem('mapsphere_custom_pois') || '[]');
+      const newPoi = {
+        id: `custom_${Date.now()}`,
+        name: body.name,
+        type: body.type,
+        lat: parseFloat(body.lat),
+        lng: parseFloat(body.lng),
+        rating: parseFloat(body.rating),
+        description: body.description,
+        status: parseFloat(body.rating) >= 4.5 ? "Highly Recommended" : (parseFloat(body.rating) < 3.8 ? "Not Recommended" : "Average")
+      };
+      customPois.push(newPoi);
+      localStorage.setItem('mapsphere_custom_pois', JSON.stringify(customPois));
+      responseData = { status: 'success', poi: newPoi };
+      status = 201;
+    } else {
+      const customPois = JSON.parse(localStorage.getItem('mapsphere_custom_pois') || '[]');
+      responseData = customPois;
+      status = 200;
+    }
+  }
+
+  return {
+    ok: status >= 200 && status < 300,
+    status: status,
+    json: async () => responseData,
+    text: async () => JSON.stringify(responseData)
+  };
+}
+
+async function safeFetch(endpoint, options = {}) {
+  if (clientSideOnly) {
+    return mockApiCall(endpoint, options);
+  }
+  
+  try {
+    const response = await fetch(getApiUrl(endpoint), options);
+    if (response.status === 404) {
+      console.warn(`Backend returned 404 for ${endpoint}. Falling back to client-side simulation.`);
+      clientSideOnly = true;
+      return mockApiCall(endpoint, options);
+    }
+    return response;
+  } catch (err) {
+    console.warn(`Backend connection failed for ${endpoint}. Falling back to client-side simulation.`, err);
+    clientSideOnly = true;
+    return mockApiCall(endpoint, options);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
   initBackgroundCanvas();
   startGlobeVisualizer();
+  await checkBackendAvailability();
   initFormInteractivity();
   initMockDashboard();
-  // checkSession(); // Always show login page first on startup
+  checkSession(); // Enable session validation on startup
 });
 
 /* ==========================================================================
@@ -239,7 +375,7 @@ function startGlobeVisualizer() {
    ========================================================================== */
 async function checkSession() {
   try {
-    const response = await fetch(getApiUrl('/api/session'));
+    const response = await safeFetch('/api/session');
     if (response.ok) {
       const data = await response.json();
       if (data.status === 'success') {
@@ -417,7 +553,7 @@ function initFormInteractivity() {
     spinner.classList.remove('hide');
 
     try {
-      const response = await fetch(getApiUrl('/api/login'), {
+      const response = await safeFetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: email.value, password: pass.value })
@@ -489,7 +625,7 @@ function initFormInteractivity() {
     spinner.classList.remove('hide');
 
     try {
-      const response = await fetch(getApiUrl('/api/register'), {
+      const response = await safeFetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: name.value, email: email.value, password: pass.value })
@@ -626,7 +762,7 @@ function initFormInteractivity() {
     sendOtpBtn.textContent = 'Sending...';
     
     try {
-      const response = await fetch(getApiUrl('/api/otp/send'), {
+      const response = await safeFetch('/api/otp/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone: phoneVal })
@@ -695,7 +831,7 @@ function initFormInteractivity() {
     spinner.classList.remove('hide');
     
     try {
-      const response = await fetch(getApiUrl('/api/otp/login'), {
+      const response = await safeFetch('/api/otp/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone: phoneVal, otp: otpVal })
@@ -1098,7 +1234,7 @@ async function exitDashboard() {
 
   try {
     // Call server logout to invalidate SQLite token session
-    await fetch(getApiUrl('/api/logout'), { method: 'POST' });
+    await safeFetch('/api/logout', { method: 'POST' });
   } catch (e) {
     console.warn('API Logout error:', e);
   }
@@ -1611,7 +1747,7 @@ async function updateNearbyExplorer(lat, lng) {
   // 2. Fetch custom POIs from database
   let customPOIs = [];
   try {
-    const response = await fetch(getApiUrl('/api/pois'));
+    const response = await safeFetch('/api/pois');
     if (response.ok) {
       customPOIs = await response.json();
       allCustomPOIs = customPOIs; // Update global database records
@@ -2053,7 +2189,7 @@ function initCustomPOIHandlers() {
     spinner.classList.remove('hide');
     
     try {
-      const response = await fetch(getApiUrl('/api/pois'), {
+      const response = await safeFetch('/api/pois', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
