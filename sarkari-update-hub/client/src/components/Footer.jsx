@@ -92,7 +92,7 @@ export default function Footer() {
             {t('siteTitle')}
           </h4>
           <p className="text-sm text-gray-400 leading-relaxed font-medium">
-            Sarkari Update Hub provides fast and accurate information on government jobs, exam dates, admit cards, and results. Verify details via official sources.
+            Apply Know provides fast and accurate information on government jobs, exam dates, admit cards, and results. Verify details via official sources.
           </p>
         </div>
 
@@ -145,7 +145,7 @@ export default function Footer() {
         <div className="max-w-3xl mx-auto mb-4 leading-relaxed font-medium">
           <strong>Disclaimer:</strong> {t('disclaimerText')} We are a private information aggregation platform and are not affiliated, associated, authorized, endorsed by, or in any way officially connected with any government body or agency.
         </div>
-        <p className="font-semibold">&copy; {new Date().getFullYear()} Sarkari Update Hub. All Rights Reserved.</p>
+        <p className="font-semibold">&copy; {new Date().getFullYear()} Apply Know. All Rights Reserved.</p>
       </div>
     </footer>
   );

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useLang } from '../context/LangContext';
-import { Calendar, FileText, Globe, ArrowLeft, ShieldAlert, Award, Briefcase, GraduationCap, Clock } from 'lucide-react';
+import { Calendar, FileText, Globe, ArrowLeft, ShieldAlert, Award, Briefcase, GraduationCap, Users, MapPin, IndianRupee } from 'lucide-react';
 
 export default function PostDetail() {
   const { id } = useParams();
@@ -42,14 +42,6 @@ export default function PostDetail() {
     });
   };
 
-  const getCategoryIcon = (category) => {
-    switch (category) {
-      case 'Job': return <Briefcase className="text-blue-500" size={24} />;
-      case 'Result': return <Award className="text-green-500" size={24} />;
-      default: return <GraduationCap className="text-purple-500" size={24} />;
-    }
-  };
-
   if (loading) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-20 text-center">
@@ -87,7 +79,7 @@ export default function PostDetail() {
         <div className="p-6 md:p-8">
           {/* Header block */}
           <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 border-b border-gray-100 pb-6">
-            <div className="space-y-1">
+            <div className="space-y-1 flex-grow">
               <span className="bg-primary/10 text-primary border border-primary/20 text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                 {post.category}
               </span>
@@ -102,6 +94,49 @@ export default function PostDetail() {
                 }`}>
                   {t(post.status === 'Active' ? 'statusActive' : 'statusClosed')}
                 </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Metrics Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-6 border-b border-gray-100">
+            <div className="border border-gray-100 rounded-2xl p-4 bg-gray-50/50 flex items-start gap-3">
+              <Users className="text-primary shrink-0 mt-0.5" size={18} />
+              <div>
+                <h4 className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{t('vacancies')}</h4>
+                <p className="text-sm font-extrabold text-gray-900 mt-0.5">
+                  {post.vacancies > 0 ? post.vacancies.toLocaleString('en-IN') : 'N/A'}
+                </p>
+              </div>
+            </div>
+
+            <div className="border border-gray-100 rounded-2xl p-4 bg-gray-50/50 flex items-start gap-3">
+              <IndianRupee className="text-primary shrink-0 mt-0.5" size={18} />
+              <div>
+                <h4 className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{t('salary')}</h4>
+                <p className="text-sm font-extrabold text-gray-900 mt-0.5">
+                  {post.salary || 'Not Specified'}
+                </p>
+              </div>
+            </div>
+
+            <div className="border border-gray-100 rounded-2xl p-4 bg-gray-50/50 flex items-start gap-3">
+              <GraduationCap className="text-primary shrink-0 mt-0.5" size={18} />
+              <div>
+                <h4 className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{t('qualification')}</h4>
+                <p className="text-xs font-extrabold text-gray-900 mt-0.5 truncate max-w-[120px]" title={post.qualification?.join(', ')}>
+                  {post.qualification && post.qualification.length > 0 ? post.qualification.join(', ') : 'N/A'}
+                </p>
+              </div>
+            </div>
+
+            <div className="border border-gray-100 rounded-2xl p-4 bg-gray-50/50 flex items-start gap-3">
+              <MapPin className="text-primary shrink-0 mt-0.5" size={18} />
+              <div>
+                <h4 className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{t('jobLocation')}</h4>
+                <p className="text-sm font-extrabold text-gray-900 mt-0.5">
+                  {post.jobLocation || 'All India'}
+                </p>
               </div>
             </div>
           </div>
@@ -147,7 +182,7 @@ export default function PostDetail() {
                   {post.importantDates?.resultDate && (
                     <div className="flex justify-between items-center gap-2">
                       <span className="text-gray-400 text-xs uppercase">{t('resultDate')}</span>
-                      <span className="text-gray-800 text-right">{formatDate(post.importantDates.resultDate)}</span>
+                      <span className="text-green-600 font-bold text-right">{formatDate(post.importantDates.resultDate)}</span>
                     </div>
                   )}
                 </div>
@@ -159,7 +194,7 @@ export default function PostDetail() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-6 border-b border-gray-100">
             <div>
               <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-2">{t('eligibility')}</h3>
-              <p className="text-sm text-gray-600 leading-relaxed font-medium">{post.eligibility}</p>
+              <p className="text-sm text-gray-600 leading-relaxed font-medium whitespace-pre-line">{post.eligibility}</p>
             </div>
             <div>
               <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-2">{t('applicationFee')}</h3>

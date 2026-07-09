@@ -1,8 +1,7 @@
 const Post = require('../models/Post');
 
-// Get all posts (with optional category, search keyword, and pagination)
 const getPosts = async (req, res) => {
-  const { category, search, page = 1, limit = 10 } = req.query;
+  const { category, search, page = 1, limit = 10, qualification, jobLocation, minVacancies } = req.query;
   const query = {};
 
   if (category && category !== 'All') {
@@ -16,6 +15,19 @@ const getPosts = async (req, res) => {
       { description: { $regex: search, $options: 'i' } },
       { eligibility: { $regex: search, $options: 'i' } },
     ];
+  }
+
+  if (qualification) {
+    const quals = qualification.split(',');
+    query.qualification = { $in: quals };
+  }
+
+  if (jobLocation) {
+    query.jobLocation = { $regex: jobLocation, $options: 'i' };
+  }
+
+  if (minVacancies) {
+    query.vacancies = { $gte: parseInt(minVacancies) };
   }
 
   try {
@@ -110,9 +122,22 @@ const getStats = async (req, res) => {
       categoryCounts[cat] = await Post.countDocuments({ category: cat });
     }
 
+    const Subscriber = require('../models/Subscriber');
+    const totalSubscribers = await Subscriber.countDocuments();
+
+    const locationsList = await Post.distinct('jobLocation');
+    const locationCounts = {};
+    for (const loc of locationsList) {
+      if (loc) {
+        locationCounts[loc] = await Post.countDocuments({ jobLocation: loc });
+      }
+    }
+
     res.json({
       totalPosts,
       categoryCounts,
+      totalSubscribers,
+      locationCounts,
     });
   } catch (error) {
     console.error(error);

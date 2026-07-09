@@ -25,7 +25,7 @@ export default function Disclaimer() {
         {/* Disclaimer Points */}
         <div className="space-y-4 text-sm text-gray-600 leading-relaxed font-medium">
           <p>
-            The content provided on <strong>Sarkari Update Hub</strong> is for general informational and educational purposes only. While we endeavour to keep all job announcements, exam timelines, eligibility standards, and result notices updated and correct, we make no representations or warranties of any kind, express or implied, about the completeness, accuracy, reliability, or suitability of the information displayed.
+            The content provided on <strong>Apply Know</strong> is for general informational and educational purposes only. While we endeavour to keep all job announcements, exam timelines, eligibility standards, and result notices updated and correct, we make no representations or warranties of any kind, express or implied, about the completeness, accuracy, reliability, or suitability of the information displayed.
           </p>
 
           <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-2">
@@ -42,10 +42,10 @@ export default function Disclaimer() {
           </div>
 
           <p>
-            Any reliance you place on information found on this portal is strictly at your own risk. In no event will Sarkari Update Hub be liable for any loss or damage including without limitation, indirect or consequential loss or damage, or any loss or damage whatsoever arising from loss of data or funds in connection with the use of this website.
+            Any reliance you place on information found on this portal is strictly at your own risk. In no event will Apply Know be liable for any loss or damage including without limitation, indirect or consequential loss or damage, or any loss or damage whatsoever arising from loss of data or funds in connection with the use of this website.
           </p>
           <p>
-            Through this website, you are able to link to other websites which are not under the control of Sarkari Update Hub. We have no control over the nature, content and availability of those sites. The inclusion of any links does not necessarily imply a recommendation or endorse the views expressed within them.
+            Through this website, you are able to link to other websites which are not under the control of Apply Know. We have no control over the nature, content and availability of those sites. The inclusion of any links does not necessarily imply a recommendation or endorse the views expressed within them.
           </p>
         </div>
       </div>

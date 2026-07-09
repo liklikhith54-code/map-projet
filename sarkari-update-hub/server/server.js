@@ -17,7 +17,7 @@ app.use(express.json());
 
 // Base Route
 app.get('/', (req, res) => {
-  res.send('Sarkari Update Hub API is running...');
+  res.send('Apply Know API is running...');
 });
 
 // API Routes
@@ -33,5 +33,5 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Sarkari Update Hub Server running on port ${PORT}...`);
+  console.log(`Apply Know Server running on port ${PORT}...`);
 });

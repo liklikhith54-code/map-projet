@@ -1,6 +1,14 @@
 # Databases (Uncomment the line below if you do NOT want to upload mapsphere.db to GitHub)
 # mapsphere.db
 
+# Node
+node_modules/
+sarkari-update-hub/client/node_modules/
+sarkari-update-hub/server/node_modules/
+sarkari-update-hub/client/dist/
+sarkari-update-hub/client/package-lock.json
+sarkari-update-hub/server/package-lock.json
+
 # OS files
 Thumbs.db
 .DS_Store

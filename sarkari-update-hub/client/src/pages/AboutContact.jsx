@@ -15,7 +15,7 @@ export default function AboutContact() {
         </h2>
         <div className="space-y-4 text-sm text-gray-600 leading-relaxed font-medium">
           <p>
-            Welcome to <strong>Sarkari Update Hub</strong>, your premier destination for verified and consolidated alerts on Indian government recruitment notices, entrance exams, results, and answer keys.
+            Welcome to <strong>Apply Know</strong>, your premier destination for verified and consolidated alerts on Indian government recruitment notices, entrance exams, results, and answer keys.
           </p>
           <p>
             Our mission is simple: to make government opportunity alerts accessible, easy-to-read, and transparent for aspirants across India. We track official gazettes, department websites, and major public releases to extract crucial timelines, fees, eligibility criteria, and direct application paths—saving candidates from crawling through multiple archaic official portals.
@@ -42,8 +42,8 @@ export default function AboutContact() {
             <div>
               <h4 className="text-gray-900 font-bold">Email Support</h4>
               <p className="text-gray-500 text-xs mt-0.5">We respond within 24-48 business hours.</p>
-              <a href="mailto:support@sarkariupdatehub.in" className="text-primary hover:underline mt-2 inline-block">
-                support@sarkariupdatehub.in
+              <a href="mailto:support@applyknow.in" className="text-primary hover:underline mt-2 inline-block">
+                support@applyknow.in
               </a>
             </div>
           </div>
@@ -52,7 +52,7 @@ export default function AboutContact() {
             <MapPin className="text-primary shrink-0 mt-1" size={20} />
             <div>
               <h4 className="text-gray-900 font-bold">Head Office</h4>
-              <p className="text-gray-500 text-xs mt-0.5">Sarkari Update Hub Inc.</p>
+              <p className="text-gray-500 text-xs mt-0.5">Apply Know Inc.</p>
               <p className="text-gray-700 text-xs font-semibold mt-2">
                 DDA Complex, Sector 9, Dwarka,<br />
                 New Delhi, 110075, India
@@ -67,7 +67,7 @@ export default function AboutContact() {
         <ShieldAlert size={24} className="shrink-0 mt-0.5" />
         <div className="text-xs font-semibold leading-relaxed">
           <h4 className="text-sm font-bold mb-1">Verify Before Applying</h4>
-          Sarkari Update Hub is a private informational resource. We compile notifications from official public sources but do not guarantee 100% accuracy due to potential changes in dates or parameters by exam authorities. Always read the detailed official brochure/PDF before paying application fees.
+          Apply Know is a private informational resource. We compile notifications from official public sources but do not guarantee 100% accuracy due to potential changes in dates or parameters by exam authorities. Always read the detailed official brochure/PDF before paying application fees.
         </div>
       </div>
     </div>

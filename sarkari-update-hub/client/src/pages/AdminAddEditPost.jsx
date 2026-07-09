@@ -24,10 +24,16 @@ export default function AdminAddEditPost() {
     applicationLastDate: '',
     examDate: '',
     resultDate: '',
+    vacancies: 0,
+    salary: '',
+    qualification: [],
+    jobLocation: 'All India',
   });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  const qualificationsList = ['10th', '12th', 'Graduate', 'B.Ed'];
 
   const formatDateForInput = (dateString) => {
     if (!dateString) return '';
@@ -59,6 +65,10 @@ export default function AdminAddEditPost() {
               applicationLastDate: formatDateForInput(data.importantDates?.applicationLastDate),
               examDate: formatDateForInput(data.importantDates?.examDate),
               resultDate: formatDateForInput(data.importantDates?.resultDate),
+              vacancies: data.vacancies || 0,
+              salary: data.salary || '',
+              qualification: data.qualification || [],
+              jobLocation: data.jobLocation || 'All India',
             });
           } else {
             setError(data.error || 'Failed to retrieve post details.');
@@ -77,6 +87,17 @@ export default function AdminAddEditPost() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleCheckboxChange = (qual) => {
+    setForm((prev) => {
+      const current = prev.qualification || [];
+      if (current.includes(qual)) {
+        return { ...prev, qualification: current.filter((q) => q !== qual) };
+      } else {
+        return { ...prev, qualification: [...current, qual] };
+      }
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -100,6 +121,10 @@ export default function AdminAddEditPost() {
       officialLink: form.officialLink.trim(),
       pdfLink: form.pdfLink.trim(),
       status: form.status,
+      vacancies: parseInt(form.vacancies) || 0,
+      salary: form.salary.trim(),
+      qualification: form.qualification,
+      jobLocation: form.jobLocation.trim(),
       importantDates: {
         notificationDate: form.notificationDate ? new Date(form.notificationDate) : null,
         applicationStartDate: form.applicationStartDate ? new Date(form.applicationStartDate) : null,
@@ -146,7 +171,7 @@ export default function AdminAddEditPost() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 font-medium text-gray-700">
       {/* Back button */}
       <Link to="/admin" className="inline-flex items-center gap-1.5 text-xs font-bold text-gray-500 hover:text-primary transition-colors mb-6 group">
         <ArrowLeft size={14} className="transform group-hover:-translate-x-0.5 transition-transform" />
@@ -171,7 +196,7 @@ export default function AdminAddEditPost() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5 text-sm">
             {/* 1. Title */}
             <div>
               <label className="text-xs font-bold text-gray-500 uppercase tracking-wide block mb-1">
@@ -240,8 +265,76 @@ export default function AdminAddEditPost() {
               </div>
             </div>
 
+            {/* Advanced Attributes Grid (Vacancies, Salary, Location) */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-gray-100 pt-4">
+              <div>
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wide block mb-1">
+                  Total Vacancies
+                </label>
+                <input
+                  type="number"
+                  name="vacancies"
+                  value={form.vacancies}
+                  onChange={handleChange}
+                  placeholder="e.g. 1250"
+                  className="w-full bg-gray-50 border border-gray-300 rounded-lg py-2 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary font-semibold text-gray-700 placeholder-gray-400"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wide block mb-1">
+                  Salary scale
+                </label>
+                <input
+                  type="text"
+                  name="salary"
+                  value={form.salary}
+                  onChange={handleChange}
+                  placeholder="e.g. ₹56,100 - ₹1,77,500"
+                  className="w-full bg-gray-50 border border-gray-300 rounded-lg py-2 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary font-semibold text-gray-700 placeholder-gray-400"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-gray-500 uppercase tracking-wide block mb-1">
+                  Job Location / State
+                </label>
+                <input
+                  type="text"
+                  name="jobLocation"
+                  value={form.jobLocation}
+                  onChange={handleChange}
+                  placeholder="e.g. Central Govt, Uttar Pradesh"
+                  className="w-full bg-gray-50 border border-gray-300 rounded-lg py-2 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary font-semibold text-gray-700 placeholder-gray-400"
+                />
+              </div>
+            </div>
+
+            {/* Qualifications Checklist */}
+            <div className="border-t border-gray-100 pt-4">
+              <label className="text-xs font-bold text-gray-500 uppercase tracking-wide block mb-2">
+                Eligible Qualifications
+              </label>
+              <div className="flex flex-wrap gap-4 text-xs font-bold text-gray-700">
+                {qualificationsList.map((qual) => {
+                  const isChecked = form.qualification.includes(qual);
+                  return (
+                    <label key={qual} className="flex items-center gap-1.5 cursor-pointer bg-gray-50 hover:bg-gray-100 px-3 py-2 border border-gray-200 rounded-xl select-none">
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => handleCheckboxChange(qual)}
+                        className="rounded text-primary focus:ring-primary h-4 w-4 cursor-pointer"
+                      />
+                      <span>{qual}</span>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
             {/* 3. Description & Eligibility */}
-            <div>
+            <div className="border-t border-gray-100 pt-4">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-wide block mb-1">
                 Description / Details <span className="text-red-500">*</span>
               </label>
@@ -271,7 +364,6 @@ export default function AdminAddEditPost() {
               />
             </div>
 
-            {/* 4. Application Fee */}
             <div>
               <label className="text-xs font-bold text-gray-500 uppercase tracking-wide block mb-1">
                 Application Fee

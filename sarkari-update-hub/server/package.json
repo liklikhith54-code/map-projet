@@ -1,7 +1,7 @@
 {
-  "name": "sarkari-update-hub-server",
+  "name": "apply-know-server",
   "version": "1.0.0",
-  "description": "Backend server for Sarkari Update Hub",
+  "description": "Backend server for Apply Know",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

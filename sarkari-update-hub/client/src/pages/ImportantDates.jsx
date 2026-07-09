@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLang } from '../context/LangContext';
-import { Search, ArrowUpDown, ExternalLink, Calendar, AlertCircle } from 'lucide-react';
+import { Search, ArrowUpDown, ExternalLink, Calendar, AlertCircle, ChevronLeft, ChevronRight, RefreshCw } from 'lucide-react';
 
 export default function ImportantDates() {
   const { t } = useLang();
@@ -9,16 +9,25 @@ export default function ImportantDates() {
   const [search, setSearch] = useState('');
   const [sortField, setSortField] = useState('title');
   const [sortDirection, setSortDirection] = useState('asc');
+  
+  // Calendar states (Defaults to July 2026 as per our seeded exam dates)
+  const [currentYear, setCurrentYear] = useState(2026);
+  const [currentMonth, setCurrentMonth] = useState(6); // July (0-indexed)
+  const [selectedDayFilter, setSelectedDayFilter] = useState(null); // { day, month, year }
+
+  const monthNames = [
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+  const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   useEffect(() => {
     const fetchAllPosts = async () => {
       setLoading(true);
       try {
-        // Fetch posts without pagination for sorting/filtering inside the table list
         const res = await fetch('/api/posts?limit=100');
         const data = await res.json();
         if (res.ok) {
-          // Filter only posts containing at least some importantDates defined
           const filtered = data.posts.filter(p => p.importantDates);
           setPosts(filtered);
         }
@@ -39,13 +48,30 @@ export default function ImportantDates() {
   };
 
   const getSortedPosts = () => {
-    // 1. Filter posts matching search keyword
-    const filtered = posts.filter(post => {
+    let filtered = posts.filter(post => {
       const matchSearch = (val) => val && val.toLowerCase().includes(search.toLowerCase());
       return matchSearch(post.title) || matchSearch(post.organization) || matchSearch(post.category);
     });
 
-    // 2. Sort posts
+    if (selectedDayFilter) {
+      filtered = filtered.filter(post => {
+        const dates = post.importantDates;
+        if (!dates) return false;
+        
+        const checkMatch = (d) => {
+          if (!d) return false;
+          const compare = new Date(d);
+          return compare.getDate() === selectedDayFilter.day &&
+                 compare.getMonth() === selectedDayFilter.month &&
+                 compare.getFullYear() === selectedDayFilter.year;
+        };
+
+        return checkMatch(dates.applicationLastDate) || 
+               checkMatch(dates.examDate) || 
+               checkMatch(dates.resultDate);
+      });
+    }
+
     return filtered.sort((a, b) => {
       let aVal, bVal;
 
@@ -81,19 +107,72 @@ export default function ImportantDates() {
     });
   };
 
+  // Calendar calculations
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
+
+  const handlePrevMonth = () => {
+    setCurrentMonth(m => {
+      if (m === 0) {
+        setCurrentYear(y => y - 1);
+        return 11;
+      }
+      return m - 1;
+    });
+    setSelectedDayFilter(null);
+  };
+
+  const handleNextMonth = () => {
+    setCurrentMonth(m => {
+      if (m === 11) {
+        setCurrentYear(y => y + 1);
+        return 0;
+      }
+      return m + 1;
+    });
+    setSelectedDayFilter(null);
+  };
+
+  const getDayEvents = (day) => {
+    const events = [];
+    posts.forEach(post => {
+      const dates = post.importantDates;
+      if (!dates) return;
+
+      const checkMatch = (d) => {
+        if (!d) return false;
+        const compare = new Date(d);
+        return compare.getDate() === day &&
+               compare.getMonth() === currentMonth &&
+               compare.getFullYear() === currentYear;
+      };
+
+      if (checkMatch(dates.applicationLastDate)) {
+        events.push({ type: 'deadline', color: 'bg-red-500', label: `Apply Last Date: ${post.organization}` });
+      }
+      if (checkMatch(dates.examDate)) {
+        events.push({ type: 'exam', color: 'bg-blue-500', label: `Exam Date: ${post.organization}` });
+      }
+      if (checkMatch(dates.resultDate)) {
+        events.push({ type: 'result', color: 'bg-green-500', label: `Result Declared: ${post.organization}` });
+      }
+    });
+    return events;
+  };
+
   const sortedAndFiltered = getSortedPosts();
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Page Header */}
-      <div className="border-b border-gray-200 pb-5 mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="border-b border-gray-200 pb-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h2 className="text-3xl font-extrabold text-gray-900 tracking-tight flex items-center gap-2 font-sans">
             <Calendar className="text-primary stroke-[2.5]" size={30} />
             <span>{t('importantDates')}</span>
           </h2>
           <p className="text-sm text-gray-500 font-semibold mt-1">
-            Browse and monitor upcoming application deadlines, exam schedules, and results announcement dates.
+            Browse and monitor upcoming application deadlines, exam schedules, and results announcements.
           </p>
         </div>
 
@@ -110,16 +189,122 @@ export default function ImportantDates() {
         </div>
       </div>
 
-      {loading ? (
-        <div className="py-20 text-center">
-          <div className="inline-block w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-          <p className="text-gray-500 text-sm font-semibold mt-3">{t('loading')}</p>
+      {/* Interactive Calendar Panel */}
+      <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Calendar controls & grid */}
+          <div className="flex-1 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="font-extrabold text-md text-gray-900 font-sans">
+                {monthNames[currentMonth]} {currentYear}
+              </h3>
+              <div className="flex items-center gap-1.5">
+                <button 
+                  onClick={handlePrevMonth} 
+                  className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-600 transition-colors"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <button 
+                  onClick={handleNextMonth} 
+                  className="p-1.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-600 transition-colors"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+
+            {/* Calendar Grid */}
+            <div className="grid grid-cols-7 gap-1.5 text-center text-xs">
+              {weekDays.map(day => (
+                <div key={day} className="py-1 font-bold text-gray-400 uppercase tracking-wider">{day}</div>
+              ))}
+              
+              {/* Offset days */}
+              {Array.from({ length: firstDayIndex }).map((_, idx) => (
+                <div key={`empty-${idx}`} className="p-3 bg-gray-50/50 rounded-lg"></div>
+              ))}
+
+              {/* Month Days */}
+              {Array.from({ length: daysInMonth }).map((_, idx) => {
+                const day = idx + 1;
+                const events = getDayEvents(day);
+                const isSelected = selectedDayFilter && selectedDayFilter.day === day && selectedDayFilter.month === currentMonth && selectedDayFilter.year === currentYear;
+                
+                return (
+                  <button
+                    key={`day-${day}`}
+                    onClick={() => {
+                      if (events.length > 0) {
+                        setSelectedDayFilter(isSelected ? null : { day, month: currentMonth, year: currentYear });
+                      }
+                    }}
+                    disabled={events.length === 0}
+                    className={`p-2.5 rounded-xl border flex flex-col items-center justify-between min-h-[50px] relative transition-all ${
+                      events.length > 0
+                        ? isSelected
+                          ? 'border-primary bg-primary/5 ring-2 ring-primary/20 cursor-pointer shadow-sm'
+                          : 'border-blue-100 bg-blue-50/20 hover:bg-blue-50/40 cursor-pointer hover:scale-[1.03]'
+                        : 'border-gray-100 bg-white text-gray-400 cursor-default'
+                    }`}
+                  >
+                    <span className={`font-bold text-xs ${events.length > 0 ? 'text-gray-900' : 'text-gray-400'}`}>{day}</span>
+                    
+                    {/* Event indicators */}
+                    {events.length > 0 && (
+                      <div className="flex gap-0.5 justify-center mt-1">
+                        {events.map((ev, eIdx) => (
+                          <span key={eIdx} className={`w-1.5 h-1.5 rounded-full ${ev.color}`} title={ev.label}></span>
+                        ))}
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Calendar legends & quick filter description */}
+          <div className="w-full md:w-64 border-t md:border-t-0 md:border-l border-gray-100 pt-5 md:pt-0 md:pl-6 space-y-4">
+            <h4 className="font-bold text-xs text-gray-900 uppercase tracking-wider">Calendar Key</h4>
+            <div className="space-y-2 text-xs font-semibold text-gray-600">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 bg-red-500 rounded-full"></span>
+                <span>Application Deadline (Last Date)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 bg-blue-500 rounded-full"></span>
+                <span>Exam Date</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 bg-green-500 rounded-full"></span>
+                <span>Results Declared</span>
+              </div>
+            </div>
+            
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 text-xs font-semibold text-gray-500 leading-relaxed">
+              <p>
+                Highlighted dates indicate upcoming exam schedule milestones. Click on any date with an event indicator dot to filter the table below to that day.
+              </p>
+              {selectedDayFilter && (
+                <button
+                  onClick={() => setSelectedDayFilter(null)}
+                  className="mt-3 flex items-center gap-1.5 text-primary hover:text-primary-dark font-extrabold uppercase tracking-wide text-[10px]"
+                >
+                  <RefreshCw size={10} />
+                  <span>Show All Dates</span>
+                </button>
+              )}
+            </div>
+          </div>
         </div>
-      ) : sortedAndFiltered.length === 0 ? (
+      </div>
+
+      {sortedAndFiltered.length === 0 ? (
         <div className="bg-white border border-gray-200 rounded-xl py-16 px-4 text-center max-w-lg mx-auto shadow-sm">
           <AlertCircle className="mx-auto text-gray-400 mb-3" size={40} />
-          <h4 className="text-lg font-bold text-gray-900">No dates matches search</h4>
-          <p className="text-gray-500 text-xs mt-1 font-medium">Try checking your spelling or search using another keyword.</p>
+          <h4 className="text-lg font-bold text-gray-900 font-sans">No dates matches filter</h4>
+          <p className="text-gray-500 text-xs mt-1 font-medium">Try clearing the date filter or searching another term.</p>
         </div>
       ) : (
         <>
@@ -176,13 +361,13 @@ export default function ImportantDates() {
                       <td className="py-4 px-5 whitespace-nowrap text-primary font-bold">
                         {formatDate(post.importantDates.examDate)}
                       </td>
-                      <td className="py-4 px-5 whitespace-nowrap">{formatDate(post.importantDates.resultDate)}</td>
+                      <td className="py-4 px-5 whitespace-nowrap text-green-600 font-bold">{formatDate(post.importantDates.resultDate)}</td>
                       <td className="py-4 px-5">
                         <a 
                           href={post.officialLink} 
                           target="_blank" 
                           rel="noopener noreferrer"
-                          className="text-primary hover:text-primary-dark inline-flex items-center gap-1 hover:underline"
+                          className="text-primary hover:text-primary-dark inline-flex items-center gap-1 hover:underline font-bold"
                         >
                           <span>Apply</span>
                           <ExternalLink size={12} />
@@ -221,7 +406,7 @@ export default function ImportantDates() {
                   </div>
                   <div>
                     <span className="text-gray-400 text-[10px] block uppercase">{t('resultDate')}</span>
-                    <span className="text-gray-800">{formatDate(post.importantDates.resultDate)}</span>
+                    <span className="text-green-600 font-bold">{formatDate(post.importantDates.resultDate)}</span>
                   </div>
                 </div>
 

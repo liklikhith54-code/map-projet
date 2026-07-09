@@ -46,6 +46,22 @@ const postSchema = new mongoose.Schema(
       default: '',
       trim: true,
     },
+    vacancies: {
+      type: Number,
+      default: 0,
+    },
+    salary: {
+      type: String,
+      default: '',
+    },
+    qualification: {
+      type: [String],
+      default: [],
+    },
+    jobLocation: {
+      type: String,
+      default: 'All India',
+    },
     status: {
       type: String,
       required: true,
